@@ -24,6 +24,24 @@ class LocalSession:
     raw_csrf: str
 
 
+def validate_local_session_csrf(
+    session: UserSession,
+    *,
+    csrf_cookie: str | None,
+    csrf_header: str | None,
+    settings: Settings,
+) -> None:
+    if (
+        csrf_cookie is None
+        or csrf_header is None
+        or not csrf_values_match(csrf_cookie, csrf_header)
+    ):
+        raise AuthFailure("CSRF_INVALID", status_code=403)
+    expected_csrf = token_digest(csrf_cookie, settings.csrf_secret)
+    if not secrets.compare_digest(session.csrf_nonce_digest, expected_csrf):
+        raise AuthFailure("CSRF_INVALID", status_code=403)
+
+
 def create_local_session(
     db: Session,
     *,
@@ -76,12 +94,6 @@ def revoke_local_session(
     settings: Settings,
     now: datetime | None = None,
 ) -> UserSession:
-    if (
-        csrf_cookie is None
-        or csrf_header is None
-        or not csrf_values_match(csrf_cookie, csrf_header)
-    ):
-        raise AuthFailure("CSRF_INVALID", status_code=403)
     if raw_session is None:
         raise AuthFailure("SESSION_INVALID")
 
@@ -97,9 +109,12 @@ def revoke_local_session(
         or user_session.expires_at <= revoked_at
     ):
         raise AuthFailure("SESSION_INVALID")
-    expected_csrf = token_digest(csrf_cookie, settings.csrf_secret)
-    if not secrets.compare_digest(user_session.csrf_nonce_digest, expected_csrf):
-        raise AuthFailure("CSRF_INVALID", status_code=403)
+    validate_local_session_csrf(
+        user_session,
+        csrf_cookie=csrf_cookie,
+        csrf_header=csrf_header,
+        settings=settings,
+    )
 
     user_session.revoked_at = revoked_at
     db.flush()

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.staff.dependencies import CurrentStaff, get_current_staff, require_permission
+from app.staff.dependencies import CurrentStaff, get_current_staff, require_csrf, require_permission
 from app.staff.permissions import Permission
 from app.staff.schemas import MeResponse, StaffResponse, StaffRolesUpdateRequest
 from app.staff.service import list_staff, me_response, update_staff_roles
@@ -35,7 +35,9 @@ def change_staff_roles(
     request: Request,
     db: Annotated[Session, Depends(get_db)],
     current: AdminStaff,
+    csrf_current: Annotated[CurrentStaff, Depends(require_csrf)],
 ) -> StaffResponse:
+    del csrf_current
     result = update_staff_roles(
         db,
         actor=current,

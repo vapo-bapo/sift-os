@@ -29,10 +29,11 @@ def _staff_with_role(db_session: Session, role: StaffRole) -> StaffMember:
 
 async def _sign_in(
     client: httpx.AsyncClient, platform_stub: PlatformStub, staff: StaffMember, ticket: str
-) -> None:
+) -> str:
     platform_stub.exchange(ticket=ticket, audience="sift-os", subject=staff.platform_user_id)
     response = await client.post("/api/auth/sso/exchange", json={"ticket": ticket})
     assert response.status_code == 204
+    return client.cookies["sift_os_csrf"]
 
 
 async def test_coding_staff_cannot_read_staff_directory(
@@ -54,10 +55,12 @@ async def test_admin_can_change_roles_and_records_audit(
     admin = _staff_with_role(db_session, StaffRole.ADMIN)
     target = _staff_with_role(db_session, StaffRole.SALES)
     db_session.commit()
-    await _sign_in(client, platform_stub, admin, "admin")
+    csrf = await _sign_in(client, platform_stub, admin, "admin")
 
     response = await client.patch(
-        f"/api/staff/{target.id}/roles", json={"roles": ["coding", "sales_lead"]}
+        f"/api/staff/{target.id}/roles",
+        json={"roles": ["coding", "sales_lead"]},
+        headers={"X-CSRF-Token": csrf},
     )
 
     assert response.status_code == 200
@@ -70,14 +73,47 @@ async def test_admin_can_change_roles_and_records_audit(
     assert audit.new == {"roles": ["coding", "sales_lead"]}
 
 
+@pytest.mark.parametrize("csrf_header", [None, "wrong"])
+async def test_admin_role_change_requires_matching_csrf_token(
+    csrf_header: str | None,
+    client: httpx.AsyncClient,
+    platform_stub: PlatformStub,
+    db_session: Session,
+) -> None:
+    admin = _staff_with_role(db_session, StaffRole.ADMIN)
+    target = _staff_with_role(db_session, StaffRole.SALES)
+    db_session.commit()
+    await _sign_in(client, platform_stub, admin, f"csrf-{csrf_header}")
+
+    headers = {} if csrf_header is None else {"X-CSRF-Token": csrf_header}
+    response = await client.patch(
+        f"/api/staff/{target.id}/roles",
+        json={"roles": ["coding"]},
+        headers=headers,
+    )
+
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "CSRF_INVALID"
+    roles = set(
+        db_session.scalars(
+            select(StaffMemberRole.role).where(StaffMemberRole.staff_member_id == target.id)
+        )
+    )
+    assert roles == {StaffRole.SALES}
+
+
 async def test_admin_cannot_remove_last_active_admin(
     client: httpx.AsyncClient, platform_stub: PlatformStub, db_session: Session
 ) -> None:
     admin = _staff_with_role(db_session, StaffRole.ADMIN)
     db_session.commit()
-    await _sign_in(client, platform_stub, admin, "last-admin")
+    csrf = await _sign_in(client, platform_stub, admin, "last-admin")
 
-    response = await client.patch(f"/api/staff/{admin.id}/roles", json={"roles": ["coding"]})
+    response = await client.patch(
+        f"/api/staff/{admin.id}/roles",
+        json={"roles": ["coding"]},
+        headers={"X-CSRF-Token": csrf},
+    )
 
     assert response.status_code == 409
     assert response.json()["error"]["code"] == "LAST_PRIVILEGED_ROLE"

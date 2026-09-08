@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.auth.models import UserSession
+from app.auth.service import validate_local_session_csrf
 from app.auth.tokens import token_digest
 from app.core.errors import ApiError
 from app.db.session import get_db
@@ -85,3 +86,17 @@ def require_permission(permission: Permission) -> Callable[..., CurrentStaff]:
         return current
 
     return dependency
+
+
+def require_csrf(
+    request: Request,
+    current: Annotated[CurrentStaff, Depends(get_current_staff)],
+) -> CurrentStaff:
+    settings = request.app.state.settings
+    validate_local_session_csrf(
+        current.session,
+        csrf_cookie=request.cookies.get(settings.csrf_cookie_name),
+        csrf_header=request.headers.get("X-CSRF-Token"),
+        settings=settings,
+    )
+    return current
