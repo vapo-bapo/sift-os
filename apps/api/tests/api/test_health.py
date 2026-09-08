@@ -94,6 +94,25 @@ async def test_unhandled_error_returns_request_id() -> None:
 
 
 @pytest.mark.anyio
+async def test_unhandled_error_returns_cors_header_for_allowed_origin() -> None:
+    app = create_app(Settings(CORS_ALLOWED_ORIGINS="https://os.example"))
+
+    @app.get("/unexpected-cors-error")
+    def unexpected_cors_error() -> None:
+        raise RuntimeError("unexpected")
+
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get(
+            "/unexpected-cors-error",
+            headers={"Origin": "https://os.example"},
+        )
+
+    assert response.status_code == 500
+    assert response.headers["Access-Control-Allow-Origin"] == "https://os.example"
+
+
+@pytest.mark.anyio
 async def test_cors_uses_configured_normalized_origin() -> None:
     app = create_app(Settings(CORS_ALLOWED_ORIGINS="https://os.example"))
     transport = httpx.ASGITransport(app=app)

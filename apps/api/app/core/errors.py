@@ -45,6 +45,15 @@ async def unexpected_error_handler(request: Request, exc: Exception) -> JSONResp
     request_id = getattr(request.state, "request_id", None)
     if not isinstance(request_id, str):
         request_id = str(uuid4())
+    headers = {"X-Request-ID": request_id}
+    origin = request.headers.get("origin")
+    allowed_origins = getattr(
+        getattr(request.app.state, "settings", None), "normalized_cors_allowed_origins", ()
+    )
+    if isinstance(origin, str) and origin in allowed_origins:
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Credentials"] = "true"
+        headers["Vary"] = "Origin"
 
     return JSONResponse(
         status_code=500,
@@ -56,5 +65,5 @@ async def unexpected_error_handler(request: Request, exc: Exception) -> JSONResp
             },
             "request_id": request_id,
         },
-        headers={"X-Request-ID": request_id},
+        headers=headers,
     )
