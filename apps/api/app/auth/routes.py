@@ -7,7 +7,7 @@ from app.audit.models import AuditResult
 from app.audit.service import record_audit_log
 from app.auth.schemas import SSOExchangeRequest
 from app.auth.service import create_local_session, revoke_local_session
-from app.auth.sso import exchange_platform_ticket, verify_platform_assertion
+from app.auth.sso import AuthFailure, exchange_platform_ticket, verify_platform_assertion
 from app.core.config import Settings
 from app.db.session import get_db
 
@@ -64,12 +64,15 @@ def _clear_auth_cookies(response: Response, settings: Settings) -> None:
 
 @router.post("/auth/sso/exchange", status_code=status.HTTP_204_NO_CONTENT)
 async def exchange_sso(
-    payload: SSOExchangeRequest,
     request: Request,
     response: Response,
     db: Annotated[Session, Depends(get_db)],
 ) -> None:
     settings: Settings = request.app.state.settings
+    try:
+        payload = SSOExchangeRequest.model_validate(await request.json())
+    except ValueError:
+        raise AuthFailure("SSO_REQUEST_INVALID", status_code=422) from None
     assertion = await exchange_platform_ticket(payload.ticket, settings)
     claims = verify_platform_assertion(assertion, request.app.state.platform_jwks, settings)
     local_session = create_local_session(db, claims=claims, settings=settings)

@@ -13,6 +13,7 @@ from app.core.errors import ApiError
 class AuthFailure(ApiError):
     def __init__(self, code: str, *, status_code: int = 401) -> None:
         messages = {
+            "SSO_REQUEST_INVALID": "La richiesta SSO non è valida.",
             "SSO_TICKET_INVALID": "Il ticket SSO non è valido o è scaduto.",
             "SSO_ASSERTION_INVALID": "L'assertion SSO non è valida o è scaduta.",
             "ASSERTION_REPLAYED": "L'assertion SSO è già stata utilizzata.",

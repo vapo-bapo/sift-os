@@ -127,3 +127,19 @@ async def test_invalid_platform_assertion_is_rejected_without_secret_material(
     body = response.text
     assert "sensitive-ticket-value" not in body
     assert platform_stub.tickets["sensitive-ticket-value"] not in body
+
+
+async def test_oversized_ticket_is_rejected_without_reflecting_secret_material(
+    client: httpx.AsyncClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    oversized_ticket = "secret-platform-ticket-" + ("x" * 600)
+
+    response = await client.post(
+        "/api/auth/sso/exchange",
+        json={"ticket": oversized_ticket},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "SSO_REQUEST_INVALID"
+    assert oversized_ticket not in response.text
+    assert oversized_ticket not in caplog.text
