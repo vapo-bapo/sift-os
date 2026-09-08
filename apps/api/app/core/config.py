@@ -67,6 +67,14 @@ class Settings(BaseSettings):
         """Return exact browser origins without URL-only trailing slashes."""
         return tuple(str(origin).rstrip("/") for origin in self.cors_allowed_origins)
 
+    @property
+    def cookie_secure(self) -> bool:
+        return self.app_env in {"staging", "production"}
+
+    @property
+    def session_ttl_seconds(self) -> int:
+        return self.session_ttl_hours * 60 * 60
+
 
 @lru_cache
 def get_settings() -> Settings:

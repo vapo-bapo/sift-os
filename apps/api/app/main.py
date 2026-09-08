@@ -5,6 +5,8 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.api.health import router as health_router
+from app.auth.routes import router as auth_router
+from app.auth.sso import platform_jwks
 from app.core.config import Settings, get_settings
 from app.core.errors import ApiError, api_error_handler, unexpected_error_handler
 from app.core.middleware import RequestIdMiddleware
@@ -23,6 +25,7 @@ def create_app(
     app_settings = settings or get_settings()
     app.state.settings = app_settings
     app.state.readiness_probe = readiness_probe
+    app.state.platform_jwks = platform_jwks(app_settings)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(app_settings.normalized_cors_allowed_origins),
@@ -34,6 +37,7 @@ def create_app(
     app.add_exception_handler(ApiError, api_error_handler)
     app.add_exception_handler(Exception, unexpected_error_handler)
     app.include_router(health_router)
+    app.include_router(auth_router)
     return app
 
 
