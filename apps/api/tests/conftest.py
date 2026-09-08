@@ -11,10 +11,10 @@ from sqlalchemy.engine.url import make_url
 from sqlalchemy.exc import ArgumentError
 from sqlalchemy.orm import Session
 
+pytest_plugins = ("tests.auth.conftest",)
+
 API_ROOT = Path(__file__).parents[1]
-TEST_DATABASE_ERROR = (
-    "TEST_DATABASE_URL must use a PostgreSQL database whose name ends in _test"
-)
+TEST_DATABASE_ERROR = "TEST_DATABASE_URL must use a PostgreSQL database whose name ends in _test"
 
 
 def validate_test_database_url(database_url: str) -> str:

@@ -10,6 +10,7 @@ from app.auth.sso import platform_jwks
 from app.core.config import Settings, get_settings
 from app.core.errors import ApiError, api_error_handler, unexpected_error_handler
 from app.core.middleware import RequestIdMiddleware
+from app.staff.routes import router as staff_router
 
 
 def _always_ready() -> bool:
@@ -38,6 +39,7 @@ def create_app(
     app.add_exception_handler(Exception, unexpected_error_handler)
     app.include_router(health_router)
     app.include_router(auth_router)
+    app.include_router(staff_router)
     return app
 
 
