@@ -1,4 +1,5 @@
 from typing import Any
+from uuid import uuid4
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -36,4 +37,24 @@ async def api_error_handler(request: Request, exc: Exception) -> JSONResponse:
             },
             "request_id": request.state.request_id,
         },
+    )
+
+
+async def unexpected_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Return a safe 500 envelope while preserving the request correlation ID."""
+    request_id = getattr(request.state, "request_id", None)
+    if not isinstance(request_id, str):
+        request_id = str(uuid4())
+
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": {
+                "code": "internal_server_error",
+                "message": "An unexpected error occurred.",
+                "details": None,
+            },
+            "request_id": request_id,
+        },
+        headers={"X-Request-ID": request_id},
     )

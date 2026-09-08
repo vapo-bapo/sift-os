@@ -1,11 +1,12 @@
 from collections.abc import Callable
 
 from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.api.health import router as health_router
 from app.core.config import Settings, get_settings
-from app.core.errors import ApiError, api_error_handler
+from app.core.errors import ApiError, api_error_handler, unexpected_error_handler
 from app.core.middleware import RequestIdMiddleware
 
 
@@ -19,10 +20,19 @@ def create_app(
 ) -> FastAPI:
     """Compose the modular FastAPI application."""
     app = FastAPI(title="SIFT OS API", version=__version__)
-    app.state.settings = settings or get_settings()
+    app_settings = settings or get_settings()
+    app.state.settings = app_settings
     app.state.readiness_probe = readiness_probe
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=list(app_settings.normalized_cors_allowed_origins),
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     app.add_middleware(RequestIdMiddleware)
     app.add_exception_handler(ApiError, api_error_handler)
+    app.add_exception_handler(Exception, unexpected_error_handler)
     app.include_router(health_router)
     return app
 

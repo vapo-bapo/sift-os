@@ -4,6 +4,10 @@ from typing import Any, Literal
 from pydantic import AnyHttpUrl, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+DEFAULT_SESSION_SECRET = "local-development-session-secret-change-me"
+DEFAULT_CSRF_SECRET = "local-development-csrf-secret-change-me"
+CorsAllowedOrigin = AnyHttpUrl | Literal["*"]
+
 
 class Settings(BaseSettings):
     """Validated runtime settings loaded from the environment."""
@@ -23,9 +27,9 @@ class Settings(BaseSettings):
     sift_platform_sso_audience: str = "sift-os"
     sift_platform_sso_issuer: AnyHttpUrl = AnyHttpUrl("http://localhost:8000")
     sift_platform_jwks_url: AnyHttpUrl = AnyHttpUrl("http://localhost:8000/.well-known/jwks.json")
-    session_secret: SecretStr = SecretStr("local-development-session-secret-change-me")
-    csrf_secret: SecretStr = SecretStr("local-development-csrf-secret-change-me")
-    cors_allowed_origins: tuple[AnyHttpUrl, ...] = (AnyHttpUrl("http://localhost:5173"),)
+    session_secret: SecretStr = SecretStr(DEFAULT_SESSION_SECRET)
+    csrf_secret: SecretStr = SecretStr(DEFAULT_CSRF_SECRET)
+    cors_allowed_origins: tuple[CorsAllowedOrigin, ...] = (AnyHttpUrl("http://localhost:5173"),)
     session_cookie_name: str = "sift_os_session"
     csrf_cookie_name: str = "sift_os_csrf"
     session_ttl_hours: int = 12
@@ -44,9 +48,24 @@ class Settings(BaseSettings):
         if self.app_env in {"staging", "production"}:
             if self.sift_os_public_url.scheme != "https":
                 raise ValueError("SIFT_OS_PUBLIC_URL must use HTTPS")
-            if len(self.session_secret.get_secret_value()) < 32:
+            session_secret = self.session_secret.get_secret_value()
+            csrf_secret = self.csrf_secret.get_secret_value()
+            if session_secret == DEFAULT_SESSION_SECRET:
+                raise ValueError("SESSION_SECRET must not use the development default")
+            if len(session_secret) < 32:
                 raise ValueError("SESSION_SECRET must contain at least 32 characters")
+            if csrf_secret == DEFAULT_CSRF_SECRET:
+                raise ValueError("CSRF_SECRET must not use the development default")
+            if len(csrf_secret) < 32:
+                raise ValueError("CSRF_SECRET must contain at least 32 characters")
+            if "*" in self.cors_allowed_origins:
+                raise ValueError("CORS_ALLOWED_ORIGINS must not include a wildcard")
         return self
+
+    @property
+    def normalized_cors_allowed_origins(self) -> tuple[str, ...]:
+        """Return exact browser origins without URL-only trailing slashes."""
+        return tuple(str(origin).rstrip("/") for origin in self.cors_allowed_origins)
 
 
 @lru_cache
