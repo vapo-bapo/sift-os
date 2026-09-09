@@ -12,6 +12,11 @@ RUN npm run build --workspace apps/web
 FROM nginx:1.27-alpine
 
 COPY deploy/web-nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY deploy/web-start.sh /usr/local/bin/sift-web-start
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html
 
+RUN chmod 0555 /usr/local/bin/sift-web-start
+
 EXPOSE 8080
+
+ENTRYPOINT ["/usr/local/bin/sift-web-start"]

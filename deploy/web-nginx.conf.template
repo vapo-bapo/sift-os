@@ -2,11 +2,14 @@ server {
     listen ${PORT};
     server_name _;
 
+    resolver ${NGINX_RESOLVER} valid=10s;
+
     root /usr/share/nginx/html;
     index index.html;
 
     location /api/ {
-        proxy_pass ${SIFT_OS_API_ORIGIN};
+        set $sift_api_origin "${SIFT_OS_API_ORIGIN}";
+        proxy_pass $sift_api_origin;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-Host $host;
