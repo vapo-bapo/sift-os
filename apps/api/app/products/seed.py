@@ -12,7 +12,11 @@ class ProductSeed:
     name: str
 
 
-PRODUCT_SEEDS = (ProductSeed("ARGUS", "ARGUS"), ProductSeed("LYNX", "LYNX"))
+PRODUCT_SEEDS = (
+    ProductSeed("ARGUS", "ARGUS"),
+    ProductSeed("LYNX", "LYNX"),
+    ProductSeed("COLLAB", "Collab"),
+)
 
 
 def seed_products(db: Session) -> None:
