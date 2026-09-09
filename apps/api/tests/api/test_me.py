@@ -10,7 +10,7 @@ from app.auth.tokens import new_opaque_token, token_digest
 from app.core.config import Settings
 from app.staff.models import StaffMember, StaffMemberRole
 from app.staff.roles import Department, StaffRole
-from tests.auth.conftest import PlatformStub
+from tests.auth_fixtures import PlatformStub
 
 pytestmark = [pytest.mark.integration, pytest.mark.anyio]
 

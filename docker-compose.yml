@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: sift_os
+      POSTGRES_USER: sift_os
+      POSTGRES_PASSWORD: sift_os
+    ports:
+      - "5433:5432"
+    volumes:
+      - sift-os-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sift_os -d sift_os"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+psycopg://sift_os:sift_os@postgres:5432/sift_os
+      SIFT_OS_PUBLIC_URL: http://localhost:5173
+      SIFT_PLATFORM_PUBLIC_URL: http://host.docker.internal:8000
+      SIFT_PLATFORM_SSO_ISSUER: http://host.docker.internal:8000
+      SIFT_PLATFORM_SSO_AUDIENCE: sift-os
+      SIFT_PLATFORM_JWKS_URL: http://host.docker.internal:8000/.well-known/jwks.json
+      SESSION_SECRET: local-development-session-secret-change-me
+      CSRF_SECRET: local-development-csrf-secret-change-me
+      CORS_ALLOWED_ORIGINS: http://localhost:5173
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    environment:
+      PORT: 8080
+      SIFT_OS_API_ORIGIN: http://api:8000
+    ports:
+      - "5173:8080"
+    depends_on:
+      - api
+
+volumes:
+  sift-os-postgres:

@@ -54,9 +54,7 @@ async def test_staff_ticket_accepts_normalized_platform_issuer(
         issuer=str(auth_settings.sift_platform_sso_issuer),
     )
 
-    response = await client.post(
-        "/api/auth/sso/exchange", json={"ticket": "normalized-issuer"}
-    )
+    response = await client.post("/api/auth/sso/exchange", json={"ticket": "normalized-issuer"})
 
     assert response.status_code == 204
 

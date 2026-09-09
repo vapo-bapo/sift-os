@@ -27,9 +27,7 @@ class TimestampMixin(CreatedAtMixin):
     )
 
 
-def enum_type[EnumType: Enum](
-    enum_class: type[EnumType], name: str
-) -> SQLAlchemyEnum:
+def enum_type[EnumType: Enum](enum_class: type[EnumType], name: str) -> SQLAlchemyEnum:
     return SQLAlchemyEnum(
         enum_class,
         name=name,

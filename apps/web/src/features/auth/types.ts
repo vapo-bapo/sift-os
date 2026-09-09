@@ -16,7 +16,11 @@ export type Permission =
   | "task:write_own"
   | "product:read"
   | "objective:read"
+  | "objective:write"
   | "finance:read"
+  | "finance:write"
+  | "audit:read"
+  | "integration:manage"
   | "staff:manage";
 
 export interface MeResponse {

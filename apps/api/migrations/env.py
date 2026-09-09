@@ -5,8 +5,13 @@ from sqlalchemy import engine_from_config, pool
 
 from app.audit import models as audit_models  # noqa: F401
 from app.auth import models as auth_models  # noqa: F401
+from app.company import models as company_models  # noqa: F401
 from app.core.config import get_settings
+from app.crm import models as crm_models  # noqa: F401
 from app.db.base import Base
+from app.finance import models as finance_models  # noqa: F401
+from app.partners import models as partner_models  # noqa: F401
+from app.products import models as product_models  # noqa: F401
 from app.staff import models as staff_models  # noqa: F401
 
 config = context.config

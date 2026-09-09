@@ -20,7 +20,11 @@ class Permission(StrEnum):
     TASK_WRITE_OWN = "task:write_own"
     PRODUCT_READ = "product:read"
     OBJECTIVE_READ = "objective:read"
+    OBJECTIVE_WRITE = "objective:write"
     FINANCE_READ = "finance:read"
+    FINANCE_WRITE = "finance:write"
+    AUDIT_READ = "audit:read"
+    INTEGRATION_MANAGE = "integration:manage"
     STAFF_MANAGE = "staff:manage"
 
 
@@ -37,6 +41,7 @@ ROLE_PERMISSIONS: Mapping[StaffRole, frozenset[Permission]] = {
             Permission.PARTNER_WRITE,
             Permission.TASK_READ,
             Permission.TASK_WRITE,
+            Permission.OBJECTIVE_READ,
         }
     ),
     StaffRole.SALES: frozenset(

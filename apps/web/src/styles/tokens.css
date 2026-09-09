@@ -12,6 +12,18 @@
   --color-gold-bright: #e0a94c;
   --color-terracotta: #c2451f;
   --color-muted: #75685b;
+  --color-success: #23715a;
+  --color-success-soft: #e5f4ed;
+  --color-warning: #a36112;
+  --color-warning-soft: #fff1d2;
+  --color-danger: #a9361b;
+  --color-danger-soft: #ffebe4;
+  --color-blue: #355d70;
+  --color-blue-soft: #e6f0f2;
   --shadow-panel: 16px 16px 0 rgb(232 223 200 / 68%);
+  --shadow-float: 0 28px 80px rgb(44 34 18 / 18%);
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
   --focus-ring: 0 0 0 3px rgb(201 148 58 / 32%);
 }

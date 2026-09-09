@@ -66,9 +66,7 @@ def upgrade() -> None:
         ),
         sa.Column("staff_member_id", sa.Uuid(), nullable=False),
         sa.Column("role", staff_role, nullable=False),
-        sa.ForeignKeyConstraint(
-            ["staff_member_id"], ["staff_members.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["staff_member_id"], ["staff_members.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("staff_member_id", "role", name="uq_staff_role"),
     )
@@ -88,9 +86,7 @@ def upgrade() -> None:
         sa.Column("platform_assertion_jti", sa.String(length=64), nullable=False),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("revoked_at", sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["staff_member_id"], ["staff_members.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["staff_member_id"], ["staff_members.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("platform_assertion_jti", name="uq_user_sessions_assertion_jti"),
         sa.UniqueConstraint("token_digest", name="uq_user_sessions_token_digest"),
@@ -118,9 +114,7 @@ def upgrade() -> None:
         sa.Column("ip_address", sa.String(length=45), nullable=True),
         sa.Column("user_agent_summary", sa.String(length=256), nullable=True),
         sa.Column("result", audit_result, nullable=False),
-        sa.ForeignKeyConstraint(
-            ["actor_staff_id"], ["staff_members.id"], ondelete="SET NULL"
-        ),
+        sa.ForeignKeyConstraint(["actor_staff_id"], ["staff_members.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_audit_logs_actor_staff_id", "audit_logs", ["actor_staff_id"], unique=False)

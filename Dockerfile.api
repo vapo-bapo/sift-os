@@ -15,4 +15,4 @@ RUN pip install --no-cache-dir .
 
 USER sift
 
-CMD ["sh", "-c", "alembic -c apps/api/alembic.ini upgrade head && python -m app.db.cli seed-staff && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "alembic -c apps/api/alembic.ini upgrade head && python -m app.db.cli seed-all && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
