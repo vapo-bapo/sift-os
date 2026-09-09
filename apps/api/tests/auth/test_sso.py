@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.auth.models import UserSession
+from app.core.config import Settings
 from app.staff.models import StaffMember
 from app.staff.roles import Department
 
@@ -38,6 +39,26 @@ async def test_staff_ticket_creates_local_session(
     assert stored is not None
     assert response.cookies["sift_os_session"] not in stored.token_digest
     assert response.cookies["sift_os_csrf"] not in stored.csrf_nonce_digest
+
+
+async def test_staff_ticket_accepts_normalized_platform_issuer(
+    client: httpx.AsyncClient,
+    platform_stub: PlatformStub,
+    active_staff: StaffMember,
+    auth_settings: Settings,
+) -> None:
+    platform_stub.exchange(
+        ticket="normalized-issuer",
+        audience="sift-os",
+        subject=active_staff.platform_user_id,
+        issuer=str(auth_settings.sift_platform_sso_issuer),
+    )
+
+    response = await client.post(
+        "/api/auth/sso/exchange", json={"ticket": "normalized-issuer"}
+    )
+
+    assert response.status_code == 204
 
 
 async def test_non_staff_platform_user_is_forbidden(

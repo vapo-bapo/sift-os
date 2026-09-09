@@ -59,7 +59,7 @@ def verify_platform_assertion(
             signing_key.key,
             algorithms=["RS256"],
             audience=settings.sift_platform_sso_audience,
-            issuer=str(settings.sift_platform_sso_issuer).rstrip("/"),
+            issuer=str(settings.sift_platform_sso_issuer),
             options={
                 "require": [
                     "iss",
