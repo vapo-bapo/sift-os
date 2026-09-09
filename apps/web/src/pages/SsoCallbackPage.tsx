@@ -31,7 +31,7 @@ export function SsoCallbackPage() {
     return <main className="status-page"><section><h1>Callback not accepted</h1><p>This sign-in callback is not intended for SIFT OS.</p></section></main>;
   }
   if (state === "failed") {
-    return <main className="status-page"><section><h1>Could not sign you in</h1><p>Return to SIFT Platform and start again.</p></section></main>;
+    return <main className="status-page"><section><h1>Could not sign you in</h1><p>Return to SIFT Platform and start again.</p><a className="button primary" href="https://sift-platform-production.up.railway.app">Open SIFT Platform</a></section></main>;
   }
   return <main className="status-page" aria-live="polite"><p>Securing your SIFT OS session…</p></main>;
 }

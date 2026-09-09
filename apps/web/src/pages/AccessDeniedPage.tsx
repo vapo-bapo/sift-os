@@ -13,6 +13,7 @@ export function AccessDeniedPage() {
         <h1 id="access-title">{isForbidden ? "Access denied" : "Sign-in required"}</h1>
         <p>{isForbidden ? "Your staff account is not currently allowed to use this workspace." : "Open SIFT OS from the SIFT Platform to establish a secure staff session."}</p>
         {error && !isForbidden ? <p className="inline-error" role="alert">We could not verify your session. Please try again from SIFT Platform.</p> : null}
+        {!isForbidden ? <a className="button primary" href="https://sift-platform-production.up.railway.app">Open SIFT Platform</a> : null}
       </section>
     </main>
   );
