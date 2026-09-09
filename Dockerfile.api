@@ -1,0 +1,18 @@
+FROM python:3.12-slim AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app/apps/api
+
+WORKDIR /app
+
+RUN addgroup --system sift && adduser --system --ingroup sift sift
+
+COPY pyproject.toml ./
+COPY apps/api ./apps/api
+
+RUN pip install --no-cache-dir .
+
+USER sift
+
+CMD ["sh", "-c", "alembic -c apps/api/alembic.ini upgrade head && python -m app.db.cli seed-staff && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
