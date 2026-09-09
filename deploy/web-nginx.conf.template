@@ -17,6 +17,24 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
     }
 
+    location = /health {
+        set $sift_api_origin "${SIFT_OS_API_ORIGIN}";
+        proxy_pass $sift_api_origin/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location = /ready {
+        set $sift_api_origin "${SIFT_OS_API_ORIGIN}";
+        proxy_pass $sift_api_origin/ready;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
     location / {
         try_files $uri $uri/ /index.html;
     }
